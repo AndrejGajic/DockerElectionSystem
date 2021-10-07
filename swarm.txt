@@ -1,0 +1,45 @@
+cd ~/bin
+
+docker-machine.exe create manager --virtualbox-no-vtx-check
+docker-machine.exe ssh manager
+	docker swarm init <GO> -> izadju ponudjene adrese
+	docker swarm init --advertise-addr "ip adresa"
+	docker service create --name registry --replicas 1 --publish 5000:5000 registry:2
+	exit
+
+docker tag authenticationdbmigration 192.168.99.100:5000/authenticationdbmigration
+docker tag authentication 192.168.99.100:5000/authentication
+docker tag admin 192.168.99.100:5000/admin
+docker tag electionsdbmigration 192.168.99.100:5000/electionsdbmigration
+docker tag votingstation 192.168.99.100:5000/votingstation
+docker tag daemon 192.168.99.100:5000/daemon
+
+docker push 192.168.99.100:5000/authenticationdbmigration
+docker push 192.168.99.100:5000/authentication
+docker push 192.168.99.100:5000/admin
+docker push 192.168.99.100:5000/electionsdbmigration
+docker push 192.168.99.100:5000/votingstation
+docker push 192.168.99.100:5000/daemon
+
+docker-machine.exe ssh manager
+	docker pull 192.168.99.100:5000/authenticationdbmigration
+	docker pull 192.168.99.100:5000/authentication
+	docker pull 192.168.99.100:5000/admin
+	docker pull 192.168.99.100:5000/electionsdbmigration
+	docker pull 192.168.99.100:5000/votingstation
+	docker pull 192.168.99.100:5000/daemon
+
+	docker tag 192.168.99.100:5000/authenticationdbmigration authenticationdbmigration
+	docker tag 192.168.99.100:5000/authentication authentication
+	docker tag 192.168.99.100:5000/admin admin
+	docker tag 192.168.99.100:5000/electionsdbmigration electionsdbmigration
+	docker tag 192.168.99.100:5000/votingstation votingstation
+	docker tag 192.168.99.100:5000/daemon daemon
+
+	cp /c/Users/Stankovic/PycharmProjects/electionSystem/stack.yaml stack.yaml
+
+		// pre ovoga mozda remove registry? zbor porta
+	docker stack deploy --compose-file stack.yaml electionStack
+
+	** BRISANJE SERVISA
+	docker service remove electionStack_authenticationDBMigration electionStack_authentication electionStack_admin electionStack_electionsDBMigration electionStack_votingStation electionStack_daemon electionStack_adminer electionStack_redis electionStack_authenticationDB electionStack_electionsDB

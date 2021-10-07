@@ -1,0 +1,135 @@
+version: '3'
+
+services:
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+    networks:
+      - authnet
+      - adminnet
+      - usernet
+      - daemonnet
+
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    networks:
+      - usernet
+      - daemonnet
+
+  authenticationDB:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - TZ=Europe/Belgrade
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+    ports:
+      - 3306:3306
+    volumes:
+      - authdbdata:/var/lib/mysql
+    networks:
+      - authnet
+
+  authenticationDBMigration:
+    image: authenticationdbmigration
+    environment:
+      - DATABASE_URL=authenticationDB
+      - TZ=Europe/Belgrade
+    networks:
+      - authnet
+
+  authentication:
+    image: authentication
+    environment:
+      - DATABASE_URL=authenticationDB
+      - TZ=Europe/Belgrade
+    ports:
+      - 5000:5000
+    networks:
+      - authnet
+
+
+
+  electionsDB:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - TZ=Europe/Belgrade
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+    ports:
+      - 3307:3306
+    volumes:
+      - electiondbdata:/var/lib/mysql
+    networks:
+      - adminnet
+      - daemonnet
+
+  electionDBMigration:
+    image: electiondbmigration
+    environment:
+      - DATABASE_URL=electionsDB
+      - TZ=Europe/Belgrade
+    networks:
+      - adminnet
+
+  electionAdmin:
+    image: admin
+    environment:
+      - DATABASE_URL=electionsDB
+      - TZ=Europe/Belgrade
+    ports:
+      - 5001:5001
+    networks:
+      - adminnet
+
+  electionUser:
+    image: user
+    environment:
+      - REDIS_URI=redis
+      - TZ=Europe/Belgrade
+    ports:
+      - 5002:5002
+    networks:
+      - usernet
+    deploy:
+      replicas: 3
+
+  electionDaemon:
+    image: daemon
+    environment:
+      - DATABASE_URL=electionsDB
+      - REDIS_URI=redis
+      - TZ=Europe/Belgrade
+    networks:
+      - daemonnet
+
+  modification:
+    image: modification
+    environment:
+      - DATABASE_URL=electionsDB
+      - TZ=Europe/Belgrade
+    networks:
+      - adminnet
+volumes:
+  authdbdata:
+  electiondbdata:
+
+
+networks:
+  authnet:
+    driver: overlay
+  adminnet:
+    driver: overlay
+  usernet:
+    driver: overlay
+  daemonnet:
+    driver: overlay

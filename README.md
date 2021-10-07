@@ -1,2 +1,2 @@
 # DockerElectionSystem
- Small election system coded in Python using Docker containers.
+ Small election system coded in python using docker containers.
